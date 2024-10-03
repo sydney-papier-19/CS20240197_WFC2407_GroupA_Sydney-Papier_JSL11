@@ -47,18 +47,18 @@ body {
 .side-bar {
   /*  */
   background-color: var(--primary-color);
-  /* border: 5px solid rgb(0, 0, 0); */
+  border: 5px solid rgb(0, 0, 0); 
   border-right: 0.1px solid #979797;
-  /* flex: 0.8; */
-  display: none;
+   flex: 0.8; 
+  display: block;
   flex-direction: column;
   gap: 50px;
-  /* padding-left: 50px; */
+ padding-left: 50px;
   padding-right: 20px;
   height: 100vh;
-  /* overflow-x: hidden; */
+  overflow-x: hidden; 
   margin-right: 0;
-  /* padding: 0 12px 0 26px; */
+ padding: 0 12px 0 26px; 
   width: 350px;
 }
 
