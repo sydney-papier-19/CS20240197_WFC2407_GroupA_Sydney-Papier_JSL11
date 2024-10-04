@@ -1,9 +1,5 @@
 // TASK: import helper functions from utils
-import { getTasks } from "./utils/taskFunctions";
-import { createNewTask } from "./utils/taskFunctions";
-import { patchTask } from "./utils/taskFunctions";
-import { putTask } from "./utils/taskFunctions";
-import { deleteTask } from "./utils/taskFunctions";
+import { getTasks, createNewTask, patchTask, putTask, deleteTask } from "./utils/taskFunctions";
 // TASK: import initialData
 import { initialData } from "./initialData";
 
@@ -27,10 +23,10 @@ const elements = {
  sideBarDiv: document.getElementById("side-bar-div"),
  logo: document.getElementById("logo"),
  boardsNavLinksDiv: document.getElementById("boards-nav-links-div"),
- themeSwitch: document.getElementById("switch"),
+ themeSwitch: document.getElementById("label-checkbox-theme"),
  labelCheckboxTheme : document.getElementById("label-checkbox-theme"),
- hideSidebarBtn: document.getElementById("hide-side-bar-btn"),
- showSidebarBtn: document.getElementById("show-side-bar-btn"),
+ hideSideBarBtn: document.getElementById("hide-side-bar-btn"),
+ showSideBarBtn: document.getElementById("show-side-bar-btn"),
 headerBoardName: document.getElementById("header-board-name"),
 addNewTaskBtn: document.getElementById("add-new-task-btn"),
 editBoardBtn: document.getElementById("edit-board-btn"),
@@ -43,10 +39,12 @@ doingTasksContainer:document.querySelector("[data-status='doing'] .tasks-contain
 //Done
 doneTasksContainer: document.querySelector("[data-status='done'] .tasks-container"),
 //Modals
+//modal window
+modal: document.getElementById('new-task-modal-window'),
 //New Task Modal
 newTaskModalWindow:document.getElementById("new-task-modal-window"),
 createTaskBtn:document.getElementById("create-task-btn"),
-cancelAddTaskBtn:document.getElementById("cancel-add-task-btn"),
+
 //Edit task modal
 editTaskForm: document.getElementById("edit-task-form"),
 saveTaskChangesBtn: document.getElementById("save-task-changes-btn"),
@@ -69,6 +67,10 @@ editTaskTitleInput: document.getElementById("edit-task-title-input"),
 editTaskDescInput: document.getElementById("edit-task-desc-input"),
 //task status
 editTaskStatusSelect: document.getElementById("edit-select-status"),
+//filter div
+filterDiv: document.getElementById('filterDiv'),
+columnDivs: document.querySelectorAll(".column-div")
+
 }
 
 let activeBoard = ""
@@ -115,7 +117,7 @@ function displayBoards(boards) {
 // TASK: Fix Bugs
 function filterAndDisplayTasksByBoard(boardName) {
   const tasks = getTasks(); // Fetch tasks from a simulated local storage function
-  const filteredTasks = tasks.filter(task => task.board = boardName);
+  const filteredTasks = tasks.filter(task => task.board ==== boardName);//filtering tasks by board using a comparison 
 
   // Ensure the column titles are set outside of this function or correctly initialized before this function runs
 
@@ -227,7 +229,7 @@ function setupEventListeners() {
   });
 
   // Add new task form submission event listener
-  elements.modalWindow.addEventListener('submit',  (event) => {
+  elements.newTaskModalWindow.addEventListener('submit',  (event) => {
     addTask(event)
   });
 }
@@ -244,12 +246,19 @@ function toggleModal(show, modal = elements.modalWindow) {
  * COMPLETE FUNCTION CODE
  * **********************************************************************************************************************************************/
 
+addNewTaskBtn.addEventListener('click', function(event) {
+  // Show the new task modal
+  toggleModal(true); // Open the modal to add a new task
+});
+
 function addTask(event) {
   event.preventDefault(); 
 
   //Assign user input to the task object
     const task = {
-      
+      title: taskTitleInput.value.trim(),       // Get the task title
+      description: taskDescInput.value.trim(),  // Get the task description
+      status: taskStatusSelect.value            // Get the task status
     };
     const newTask = createNewTask(task);
     if (newTask) {
@@ -261,46 +270,102 @@ function addTask(event) {
     }
 }
 
-
+//Function for sidebar toggles
 function toggleSidebar(show) {
- 
+  if (show === true) {
+    // Show the sidebar and hide the "show" button
+    elements.sideBarDiv.style.display = 'block';
+    elements.showSidebarBtn.style.display = 'none';
+  } else {
+    // Hide the sidebar and show the "show" button
+    elements.sideBarDiv.style.display = 'none';
+    elements.showSidebarBtn.style.display = 'block';
+  }
 }
-
+ 
+//function for dark/light mode
 function toggleTheme() {
- 
+  const body = document.body; // Get the body element
+  const isDarkMode = body.classList.contains('dark-mode'); // Check if dark mode is currently applied
+
+  if (isDarkMode) {
+    body.classList.remove('dark-mode'); // Switch to light mode
+    localStorage.setItem('theme', 'light'); // Save the preference to local storage
+  } else {
+    body.classList.add('dark-mode'); // Switch to dark mode
+    localStorage.setItem('theme', 'dark'); // Save the preference to local storage
+  }
+// Add event listener to the theme switch checkbox
+document.getElementById('switch').addEventListener('change', toggleTheme);
+
+// On page load, set the theme based on the user's previous preference
+document.addEventListener('DOMContentLoaded', () => {
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark-mode'); // Apply dark mode if saved in local storage
+    document.getElementById('switch').checked = true; // Set the checkbox to checked for dark mode
+  }
+});
+
 }
 
-
-
+//function will populate the modal with the task's current details and set up event listeners for the save and delete actions.
 function openEditTaskModal(task) {
   // Set task details in modal inputs
-  
+   // Set task details in modal inputs
+   const taskTitleInput = document.querySelector("#editTaskTitle");
+   const taskDescriptionInput = document.querySelector("#editTaskDescription");
+   const taskDueDateInput = document.querySelector("#editTaskDueDate");
+
+   // Populate inputs with the current task details
+   taskTitleInput.value = task.title;
+   taskDescriptionInput.value = task.description;
+   taskDueDateInput.value = task.dueDate;
 
   // Get button elements from the task modal
-
+  const saveChangesButton = document.querySelector("#saveChangesButton");//Clicking this button saves the updated task details.
+  const deleteTaskButton = document.querySelector("#deleteTaskButton");//Clicking this button deletes the task and closes the modal.
 
   // Call saveTaskChanges upon click of Save Changes button
- 
+  saveChangesButton.onclick = () => {
+    saveTaskChanges(task.id);
+};
 
   // Delete task using a helper function and close the task modal
-
+  deleteTaskButton.onclick = () => {
+    deleteTask(task.id);
+    toggleModal(false, elements.editTaskModal); // Hide the edit task modal
+    refreshTasksUI(); // Refresh UI to reflect the deleted task
+};
 
   toggleModal(true, elements.editTaskModal); // Show the edit task modal
 }
 
+//function retrieves the user inputs, creates an updated task object, and uses 
+//the patchTask or putTask function to update the task.
 function saveTaskChanges(taskId) {
   // Get new user inputs
-  
+  const taskTitleInput = document.querySelector("#editTaskTitle");
+  const taskDescriptionInput = document.querySelector("#editTaskDescription");
+  const taskDueDateInput = document.querySelector("#editTaskDueDate");
+
 
   // Create an object with the updated task details
+  const updatedTask = {
+    title: taskTitleInput.value,
+    description: taskDescriptionInput.value,
+    dueDate: taskDueDateInput.value,
+    id: taskId // Ensure the ID is also included
+};
 
+  // Update task using a helper function
+  putTask(taskId, updatedTask); // Or patchTask if you're making partial updates
 
-  // Update task using a hlper functoin
- 
 
   // Close the modal and refresh the UI to reflect the changes
+  toggleModal(false, elements.editTaskModal); // Hide the edit task modal
+  refreshTasksUI();// Refresh UI to reflect the updated task
 
-  refreshTasksUI();
 }
 
 /*************************************************************************************************************************************************/
