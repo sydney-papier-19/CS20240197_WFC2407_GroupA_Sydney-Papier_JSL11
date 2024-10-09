@@ -1,7 +1,7 @@
 // TASK: import helper functions from utils
-import { getTasks, createNewTask, patchTask, putTask, deleteTask } from "./utils/taskFunctions";
+import { getTasks, createNewTask, patchTask, putTask, deleteTask } from "./utils/taskFunctions.js";
 // TASK: import initialData
-import { initialData } from "./initialData";
+import { initialData } from "./initialData.js";
 
 
 /*************************************************************************************************************************************************
@@ -20,7 +20,7 @@ function initializeData() {
 
 // TASK: Get elements from the DOM
 const elements = {
- sideBarDiv: document.getElementById("side-bar-div"),
+  sideBar : document.getElementById("side-bar-div"), 
  logo: document.getElementById("logo"),
  boardsNavLinksDiv: document.getElementById("boards-nav-links-div"),
  themeSwitch: document.getElementById("label-checkbox-theme"),
@@ -117,7 +117,7 @@ function displayBoards(boards) {
 // TASK: Fix Bugs
 function filterAndDisplayTasksByBoard(boardName) {
   const tasks = getTasks(); // Fetch tasks from a simulated local storage function
-  const filteredTasks = tasks.filter(task => task.board ==== boardName);//filtering tasks by board using a comparison 
+  const filteredTasks = tasks.filter(task => task.board === boardName);//filtering tasks by board using a comparison 
 
   // Ensure the column titles are set outside of this function or correctly initialized before this function runs
 
@@ -223,7 +223,7 @@ function setupEventListeners() {
   elements.themeSwitch.addEventListener('change', toggleTheme);
 
   // Show Add New Task Modal event listener
-  elements.createNewTaskBtn.addEventListener('click', () => {
+  elements.addNewTaskBtn.addEventListener('click', () => {
     toggleModal(true);
     elements.filterDiv.style.display = 'block'; // Also show the filter overlay
   });
@@ -246,19 +246,18 @@ function toggleModal(show, modal = elements.modalWindow) {
  * COMPLETE FUNCTION CODE
  * **********************************************************************************************************************************************/
 
-addNewTaskBtn.addEventListener('click', function(event) {
-  // Show the new task modal
-  toggleModal(true); // Open the modal to add a new task
-});
+
+
+
 
 function addTask(event) {
   event.preventDefault(); 
 
   //Assign user input to the task object
     const task = {
-      title: taskTitleInput.value.trim(),       // Get the task title
-      description: taskDescInput.value.trim(),  // Get the task description
-      status: taskStatusSelect.value            // Get the task status
+      title: elements.taskTitleInput.value.trim(),       // Get the task title
+      description: elements.taskDescInput.value.trim(),  // Get the task description
+      status: elements.taskStatusSelect.value            // Get the task status
     };
     const newTask = createNewTask(task);
     if (newTask) {
@@ -268,19 +267,15 @@ function addTask(event) {
       event.target.reset();
       refreshTasksUI();
     }
+    board : activeBoard;
 }
 
 //Function for sidebar toggles
 function toggleSidebar(show) {
-  if (show === true) {
-    // Show the sidebar and hide the "show" button
-    elements.sideBarDiv.style.display = 'block';
-    elements.showSidebarBtn.style.display = 'none';
-  } else {
-    // Hide the sidebar and show the "show" button
-    elements.sideBarDiv.style.display = 'none';
-    elements.showSidebarBtn.style.display = 'block';
-  }
+ 
+  elements.showSideBarBtn.style.display = show ? "none" : "block";
+  elements.sideBar.style.display = show ? "block" : "none";
+
 }
  
 //function for dark/light mode
@@ -344,6 +339,7 @@ function openEditTaskModal(task) {
 //function retrieves the user inputs, creates an updated task object, and uses 
 //the patchTask or putTask function to update the task.
 function saveTaskChanges(taskId) {
+  board : activeBoard;
   // Get new user inputs
   const taskTitleInput = document.querySelector("#editTaskTitle");
   const taskDescriptionInput = document.querySelector("#editTaskDescription");
@@ -352,10 +348,10 @@ function saveTaskChanges(taskId) {
 
   // Create an object with the updated task details
   const updatedTask = {
-    title: taskTitleInput.value,
-    description: taskDescriptionInput.value,
-    dueDate: taskDueDateInput.value,
-    id: taskId // Ensure the ID is also included
+    title: elements.taskTitleInput.value.trim(),
+    description: elements.taskDescriptionInput.value.trim(),
+    dueDate: elements.taskDueDateInput.value.trim(),
+    id: taskId // Ensure the ID is also included 
 };
 
   // Update task using a helper function
