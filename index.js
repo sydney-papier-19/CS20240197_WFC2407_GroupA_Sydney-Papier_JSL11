@@ -20,15 +20,17 @@ function initializeData() {
 
 // TASK: Get elements from the DOM
 const elements = {
-  sideBar : document.getElementById("side-bar-div"), 
+ sideBar : document.getElementById("side-bar-div"), 
  logo: document.getElementById("logo"),
  boardsNavLinksDiv: document.getElementById("boards-nav-links-div"),
- themeSwitch: document.getElementById("label-checkbox-theme"),
+ themeSwitch: document.getElementById("switch"),
  labelCheckboxTheme : document.getElementById("label-checkbox-theme"),
  hideSideBarBtn: document.getElementById("hide-side-bar-btn"),
  showSideBarBtn: document.getElementById("show-side-bar-btn"),
 headerBoardName: document.getElementById("header-board-name"),
 addNewTaskBtn: document.getElementById("add-new-task-btn"),
+
+editBoardDiv: document.getElementById("editBoardDiv"),
 editBoardBtn: document.getElementById("edit-board-btn"),
 deleteBoardBtn: document.getElementById("deleteBoardBtn"),
 //Tasks Column
@@ -39,11 +41,10 @@ doingTasksContainer:document.querySelector("[data-status='doing'] .tasks-contain
 //Done
 doneTasksContainer: document.querySelector("[data-status='done'] .tasks-container"),
 //Modals
-//modal window
-modal: document.getElementById('new-task-modal-window'),
 //New Task Modal
 newTaskModalWindow:document.getElementById("new-task-modal-window"),
 createTaskBtn:document.getElementById("create-task-btn"),
+cancelAddTaskBtn: document.getElementById("cancel-add-task-btn"),
 
 //Edit task modal
 editTaskForm: document.getElementById("edit-task-form"),
@@ -69,9 +70,10 @@ editTaskDescInput: document.getElementById("edit-task-desc-input"),
 editTaskStatusSelect: document.getElementById("edit-select-status"),
 //filter div
 filterDiv: document.getElementById('filterDiv'),
-columnDivs: document.querySelectorAll(".column-div")
-
-}
+columnDivs: document.querySelectorAll(".column-div"),
+deleteTaskCancelBtn: document.getElementById("delete-task-cancel-btn"),
+saveTaskChangesBtn: document.getElementById("save-task-changes-btn"),
+};
 
 let activeBoard = ""
 
@@ -232,6 +234,22 @@ function setupEventListeners() {
   elements.newTaskModalWindow.addEventListener('submit',  (event) => {
     addTask(event)
   });
+
+   // Get button elements from the task modal
+   const saveChangesButton = document.querySelector("#saveChangesButton");//Clicking this button saves the updated task details.
+   const deleteTaskButton = document.querySelector("#deleteTaskButton");//Clicking this button deletes the task and closes the modal.
+ 
+   // Call saveTaskChanges upon click of Save Changes button
+   saveChangesButton.onclick = () => {
+     saveTaskChanges(task.id);
+ };
+ 
+   // Delete task using a helper function and close the task modal
+   deleteTaskButton.onclick = () => {
+     deleteTask(task.id);
+     toggleModal(false, elements.editTaskModal); // Hide the edit task modal
+     refreshTasksUI(); // Refresh UI to reflect the deleted task
+ };
 }
 
 // Toggles tasks modal
@@ -281,26 +299,26 @@ function toggleSidebar(show) {
 //function for dark/light mode
 function toggleTheme() {
   const body = document.body; // Get the body element
-  const isDarkMode = body.classList.contains('dark-mode'); // Check if dark mode is currently applied
+  const isLightTheme = body.classList.contains('light-theme'); // Check if dark mode is currently applied
 
-  if (isDarkMode) {
-    body.classList.remove('dark-mode'); // Switch to light mode
-    localStorage.setItem('theme', 'light'); // Save the preference to local storage
+  if (isLightTheme) {
+    body.classList.remove('light-theme'); // Switch to dark mode
+    localStorage.setItem('ligt-theme', 'active' ); // Save the preference to local storage
   } else {
-    body.classList.add('dark-mode'); // Switch to dark mode
-    localStorage.setItem('theme', 'dark'); // Save the preference to local storage
+    body.classList.add('light-theme'); // Switch to light mode
+    localStorage.setItem('theme', 'light-theme'); // Save the preference to local storage
   }
 // Add event listener to the theme switch checkbox
 document.getElementById('switch').addEventListener('change', toggleTheme);
 
-// On page load, set the theme based on the user's previous preference
-document.addEventListener('DOMContentLoaded', () => {
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'dark') {
-    document.body.classList.add('dark-mode'); // Apply dark mode if saved in local storage
-    document.getElementById('switch').checked = true; // Set the checkbox to checked for dark mode
-  }
-});
+  // On page load, set the theme based on the user's previous preference
+  document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light-theme') {
+      document.body.classList.add('light-theme'); // Apply dark mode if saved in local storage
+      document.getElementById('switch').checked = true; // Set the checkbox to checked for light mode
+    }
+  });
 
 }
 
@@ -371,10 +389,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function init() {
+  initializeData();
   setupEventListeners();
   const showSidebar = localStorage.getItem('showSideBar') === 'true';
   toggleSidebar(showSidebar);
   const isLightTheme = localStorage.getItem('light-theme') === 'enabled';
   document.body.classList.toggle('light-theme', isLightTheme);
+
   fetchAndDisplayBoardsAndTasks(); // Initial display of boards and tasks
 }
