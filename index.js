@@ -70,6 +70,7 @@ editTaskTitleInput: document.getElementById("edit-task-title-input"),
 editTaskDescInput: document.getElementById("edit-task-desc-input"),
 //task status
 editTaskStatusSelect: document.getElementById("edit-select-status"),
+
 //filter div
 filterDiv: document.getElementById('filterDiv'),
 columnDivs: document.querySelectorAll(".column-div"),
@@ -271,9 +272,11 @@ elements.addNewBoardBtn.addEventListener('click', () => {
   });
 
   // Add new task form submission event listener
-  elements.newTaskModalWindow.addEventListener('submit',  (event) => {
-    addTask(event)
+  elements.newTaskModalWindow.addEventListener('submit', (event) => {
+    event.preventDefault(); // Prevent default form submission
+    addTask(event);
   });
+  
 
    // Get button elements from the task modal
    const saveChangesButton = document.querySelector("#saveChangesButton");//Clicking this button saves the updated task details.
@@ -435,23 +438,7 @@ function openEditTaskModal(task) {
    // Populate inputs with the current task details
    editTaskTitleInput.value = task.title;
    editTaskDescInput.value = task.description;
-   taskDueDateInput.value = task.dueDate;
-
-  // Get button elements from the task modal
-  const saveChangesButton = document.querySelector("#saveChangesButton");//Clicking this button saves the updated task details.
-  const deleteTaskButton = document.querySelector("#deleteTaskButton");//Clicking this button deletes the task and closes the modal.
-
-  // Call saveTaskChanges upon click of Save Changes button
-  saveChangesButton.onclick = () => {
-    saveTaskChanges(task.id);
-};
-
-  // Delete task using a helper function and close the task modal
-  deleteTaskButton.onclick = () => {
-    deleteTask(task.id);
-    toggleModal(false, elements.editTaskModal); // Hide the edit task modal
-    refreshTasksUI(); // Refresh UI to reflect the deleted task
-};
+   editTaskStatusSelect.value = task.dueDate;
 
   toggleModal(true, elements.editTaskModal); // Show the edit task modal
 }
