@@ -70,6 +70,7 @@ body {
   height: 200px;
 }
 
+
 #create-board-btn {
   /* order: -3; */
   display: flex;
@@ -296,8 +297,9 @@ header {
   justify-content: center;
   flex-direction: column;
   gap: 20px;
-  margin-top: auto;
-  margin-bottom: 40px;
+  margin-top:8rem;
+  padding-top: 10rem;
+  
 }
 
 /* Edit task */

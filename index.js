@@ -22,17 +22,18 @@ function initializeData() {
 const elements = {
  sideBar : document.getElementById("side-bar-div"), 
  logo: document.getElementById("logo"),
- boardsNavLinksDiv: document.getElementById("boards-nav-links-div"),
+ 
  themeSwitch: document.getElementById("switch"),
  labelCheckboxTheme : document.getElementById("label-checkbox-theme"),
  hideSideBarBtn: document.getElementById("hide-side-bar-btn"),
  showSideBarBtn: document.getElementById("show-side-bar-btn"),
-headerBoardName: document.getElementById("header-board-name"),
-addNewTaskBtn: document.getElementById("add-new-task-btn"),
+ headerBoardName: document.getElementById("header-board-name"),
+ addNewTaskBtn: document.getElementById("add-new-task-btn"),
+addNewBoardBtn: document.getElementById("create-board-btn"),
 
-editBoardDiv: document.getElementById("editBoardDiv"),
-editBoardBtn: document.getElementById("edit-board-btn"),
-deleteBoardBtn: document.getElementById("deleteBoardBtn"),
+ editBoardDiv: document.getElementById("editBoardDiv"),
+ editBoardBtn: document.getElementById("edit-board-btn"),
+ deleteBoardBtn: document.getElementById("deleteBoardBtn"),
 //Tasks Column
 //ToDo
 todoTasksContainer: document.querySelector("[data-status='todo'] .tasks-container"),
@@ -62,6 +63,7 @@ taskDescInput: document.getElementById("desc-input"),
 // Task status selection
 taskStatusSelect: document.getElementById("select-status"),
 //Edit Task Inputs
+editTaskModal: document.getElementById("edit-task-modal-window"),
 //Task title
 editTaskTitleInput: document.getElementById("edit-task-title-input"),
 //Task description
@@ -80,11 +82,12 @@ let activeBoard = ""
 // Extracts unique board names from tasks
 // TASK: FIX BUGS
 function fetchAndDisplayBoardsAndTasks() {
-  const tasks = getTasks();
-  const boards = [...new Set(tasks.map(task => task.board).filter(Boolean))];
+  const tasks = getTasks(); // Fetch tasks from localStorage or a default empty array
+  const boards =  JSON.parse(localStorage.getItem('boards')) || []; // Get the list of boards from localStorage
   displayBoards(boards);
+
   if (boards.length > 0) {
-    const localStorageBoard = JSON.parse(localStorage.getItem("activeBoard"))
+    const localStorageBoard = JSON.parse(localStorage.getItem("activeBoard"));
     //
     activeBoard = localStorageBoard ? localStorageBoard : boards[0]; 
     elements.headerBoardName.textContent = activeBoard
@@ -98,11 +101,13 @@ function fetchAndDisplayBoardsAndTasks() {
 function displayBoards(boards) {
   const boardsContainer = document.getElementById("boards-nav-links-div");
   boardsContainer.innerHTML = ''; // Clears the container
+
   boards.forEach(board => {
-    const boardElement = document.createElement("button");
-    boardElement.textContent = board;
-    boardElement.classList.add("board-btn");
-    //added a click event listener the correctly 
+    const boardElement = document.createElement("div"); // Changed from button to div to contain both board name and delete button
+    const boardButton = document.createElement("button");
+    boardButton.textContent = board;
+    boardButton.classList.add("board-btn");
+    //added a click event listener correctly 
     boardElement.addEventListener('click', () => { 
       elements.headerBoardName.textContent = board;
       filterAndDisplayTasksByBoard(board);
@@ -110,9 +115,36 @@ function displayBoards(boards) {
       localStorage.setItem("activeBoard", JSON.stringify(activeBoard));
       styleActiveBoard(activeBoard);
     });
+  
+     // Create a delete button for each board
+     const deleteBoardBtn = document.createElement("button");
+     deleteBoardBtn.textContent = "Delete";
+     deleteBoardBtn.classList.add("delete-board-btn");
+     deleteBoardBtn.addEventListener('click', (event) => {
+       event.stopPropagation(); // Prevents triggering the board click event
+       deleteBoard(board);
+     });
+
+        // Append the board button and delete button to the board element
+    boardElement.appendChild(boardButton);
+    boardElement.appendChild(deleteBoardBtn);
+
+    // Append the board element to the container
     boardsContainer.appendChild(boardElement);
   });
-
+   
+   // Re-append the "Add New Board" button after displaying boards
+   const addBoardButton = document.createElement("button");
+   addBoardButton.textContent = "Add New Board";
+   addBoardButton.id = "add-new-board-btn";
+   addBoardButton.addEventListener('click', () => {
+     const newBoardName = prompt("Enter new board name");
+     if (newBoardName) {
+       createNewBoard(newBoardName);
+     }
+   });
+ 
+   boardsContainer.appendChild(addBoardButton);
 }
 
 // Filters tasks corresponding to the board name and displays them on the DOM.
@@ -224,6 +256,14 @@ function setupEventListeners() {
   // Theme switch event listener
   elements.themeSwitch.addEventListener('change', toggleTheme);
 
+  // Listen for "Add New Board" button click
+elements.addNewBoardBtn.addEventListener('click', () => {
+  const newBoardName = prompt("Enter the new board name:");
+  if (newBoardName) {
+    createNewBoard(newBoardName);
+  }
+});
+
   // Show Add New Task Modal event listener
   elements.addNewTaskBtn.addEventListener('click', () => {
     toggleModal(true);
@@ -264,7 +304,69 @@ function toggleModal(show, modal = elements.modalWindow) {
  * COMPLETE FUNCTION CODE
  * **********************************************************************************************************************************************/
 
+function createNewBoard(boardName) {
+  // Ensure boardName is trimmed to avoid issues with leading/trailing spaces
+  boardName = boardName.trim();
 
+  // Ensure boardName is not empty after trimming
+  if (!boardName) {
+    alert('Board name cannot be empty. Please enter a valid name.');
+    return;
+  }
+
+  // Get the list of existing boards from localStorage
+  const boards = JSON.parse(localStorage.getItem('boards')) || [];
+
+  // Convert both existing board names and the new boardName to lowercase for case-insensitive comparison
+  const existingBoard = boards.find(board => board.toLowerCase() === boardName.toLowerCase());
+
+  // If a board with the same name (case-insensitive) exists, show an alert
+  if (existingBoard) {
+    alert('A board with this name already exists. Please choose a different name.');
+    return; // Exit the function if the board is a duplicate
+  }
+
+  // Add the new board to the boards array and save it to localStorage
+  boards.push(boardName);
+  localStorage.setItem('boards', JSON.stringify(boards));
+
+  // Set the new board as the active board
+  activeBoard = boardName;
+  localStorage.setItem('activeBoard', JSON.stringify(activeBoard));
+
+  // Update the UI to display the new board
+  elements.headerBoardName.textContent = boardName;
+  displayBoards(boards); // Refresh the list of boards in the UI
+}
+
+
+function deleteBoard(boardName) {
+  // Retrieve the current boards and tasks from localStorage
+  const boards = JSON.parse(localStorage.getItem('boards')) || [];
+  const tasks = getTasks();
+
+  // Remove the selected board from the boards array
+  const updatedBoards = boards.filter(board => board !== boardName);
+  localStorage.setItem('boards', JSON.stringify(updatedBoards));
+
+  // Remove tasks associated with the deleted board
+  const updatedTasks = tasks.filter(task => task.board !== boardName);
+  localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+
+  // If the active board is deleted, set the active board to the first available one
+  if (activeBoard === boardName && updatedBoards.length > 0) {
+    activeBoard = updatedBoards[0];
+    localStorage.setItem('activeBoard', JSON.stringify(activeBoard));
+  } else if (updatedBoards.length === 0) {
+    activeBoard = "";
+    localStorage.removeItem("activeBoard");
+  }
+
+  // Refresh the UI
+  elements.headerBoardName.textContent = activeBoard || 'No Board Selected';
+  displayBoards(updatedBoards);
+  refreshTasksUI();
+}
 
 
 
@@ -275,7 +377,9 @@ function addTask(event) {
     const task = {
       title: elements.taskTitleInput.value.trim(),       // Get the task title
       description: elements.taskDescInput.value.trim(),  // Get the task description
-      status: elements.taskStatusSelect.value            // Get the task status
+      status: elements.taskStatusSelect.value,            // Get the task status
+      board: activeBoard, //assigns the task to the current active board
+      id: Date.now(), //unique id for task
     };
     const newTask = createNewTask(task);
     if (newTask) {
@@ -285,7 +389,7 @@ function addTask(event) {
       event.target.reset();
       refreshTasksUI();
     }
-    board : activeBoard;
+
 }
 
 //Function for sidebar toggles
@@ -326,13 +430,11 @@ document.getElementById('switch').addEventListener('change', toggleTheme);
 function openEditTaskModal(task) {
   // Set task details in modal inputs
    // Set task details in modal inputs
-   const taskTitleInput = document.querySelector("#editTaskTitle");
-   const taskDescriptionInput = document.querySelector("#editTaskDescription");
    const taskDueDateInput = document.querySelector("#editTaskDueDate");
 
    // Populate inputs with the current task details
-   taskTitleInput.value = task.title;
-   taskDescriptionInput.value = task.description;
+   editTaskTitleInput.value = task.title;
+   editTaskDescInput.value = task.description;
    taskDueDateInput.value = task.dueDate;
 
   // Get button elements from the task modal
@@ -357,7 +459,7 @@ function openEditTaskModal(task) {
 //function retrieves the user inputs, creates an updated task object, and uses 
 //the patchTask or putTask function to update the task.
 function saveTaskChanges(taskId) {
-  board : activeBoard;
+
   // Get new user inputs
   const taskTitleInput = document.querySelector("#editTaskTitle");
   const taskDescriptionInput = document.querySelector("#editTaskDescription");
@@ -369,6 +471,7 @@ function saveTaskChanges(taskId) {
     title: elements.taskTitleInput.value.trim(),
     description: elements.taskDescriptionInput.value.trim(),
     dueDate: elements.taskDueDateInput.value.trim(),
+    board: activeBoard, //assign updated task to current active board
     id: taskId // Ensure the ID is also included 
 };
 
